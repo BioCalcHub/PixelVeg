@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelVeg — Plant Image Analyser</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap');
+
+  :root {
+    --bg: #0e1a0f;
+    --surface: #162118;
+    --surface2: #1e2d20;
+    --border: #2d4030;
+    --green-bright: #7fff6a;
+    --green-mid: #4db840;
+    --green-muted: #2a5c2e;
+    --amber: #f5c842;
+    --red: #ff6b6b;
+    --text: #d4e8d5;
+    --text-dim: #6a8a6d;
+    --mono: 'DM Mono', monospace;
+    --serif: 'Fraunces', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(45,64,48,0.25) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45,64,48,0.25) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  header { margin-bottom: 6px; }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--green-bright);
+    letter-spacing: -0.02em;
+  }
+
+  h1 span {
+    color: var(--text-dim);
+    font-weight: 300;
+    font-style: italic;
+  }
+
+  .tagline {
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-header .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green-mid);
+    display: inline-block;
+    margin-right: 8px;
+    box-shadow: 0 0 6px var(--green-mid);
+  }
+
+  .canvas-wrap {
+    background: #060d07;
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #canvas {
+    display: none;
+    max-width: 100%;
+    max-height: 460px;
+  }
+
+  .upload-prompt {
+    text-align: center;
+    padding: 40px 30px;
+    color: var(--text-dim);
+  }
+  .upload-prompt .icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+  .upload-prompt p { margin-bottom: 16px; line-height: 1.7; }
+
+  .progress-wrap {
+    display: none;
+    height: 3px;
+    background: var(--surface2);
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--green-mid);
+    width: 0%;
+    transition: width 0.08s linear;
+    box-shadow: 0 0 8px var(--green-mid);
+  }
+
+  .pixel-info {
+    padding: 7px 16px;
+    font-size: 10px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    display: none;
+  }
+
+  .toolbar {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    display: none;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 9px 22px;
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .btn-primary { background: var(--green-mid); color: #0a150b; font-weight: 500; }
+  .btn-primary:hover:not(:disabled) { background: var(--green-bright); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--green-muted); color: var(--text); }
+
+  #fileInput, #fileInput2 { display: none; }
+
+  /* Sidebar */
+  .sidebar { display: flex; flex-direction: column; gap: 14px; }
+
+  .mean-swatch {
+    margin: 14px 16px 0;
+    height: 48px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-style: italic;
+    color: var(--text-dim);
+    transition: background 0.4s;
+  }
+
+  .rgb-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    padding: 12px 16px 14px;
+  }
+
+  .channel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .channel .label { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .channel.r .label { color: #ff8080; }
+  .channel.g .label { color: #80ff80; }
+  .channel.b .label { color: #8080ff; }
+  .channel .value { font-size: 1.4rem; font-weight: 500; color: var(--text); }
+  .channel .norm  { font-size: 9px; color: var(--text-dim); margin-top: 2px; }
+
+  .indices-box { padding: 10px 16px 14px; }
+
+  .index-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .index-row:last-child { border-bottom: none; }
+
+  .index-name { font-size: 11px; color: var(--text-dim); }
+  .index-name strong { display: block; color: var(--text); font-size: 12px; margin-bottom: 2px; }
+
+  .index-right { text-align: right; min-width: 80px; }
+  .index-value { font-size: 1.25rem; font-weight: 500; }
+
+  .index-bar-wrap {
+    width: 100%; height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin-top: 5px;
+    overflow: hidden;
+  }
+  .index-bar {
+    height: 100%; border-radius: 2px;
+    transition: width 0.6s ease;
+    background: var(--green-mid);
+  }
+
+  .formula-box { padding: 14px 16px; }
+  .formula-item { margin-bottom: 12px; }
+  .formula-item:last-child { margin-bottom: 0; }
+  .fname { color: var(--green-bright); font-size: 11px; margin-bottom: 3px; }
+  .formula-expr {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 6px 10px;
+    font-size: 11px; color: var(--amber); line-height: 1.5;
+  }
+  .formula-desc { color: var(--text-dim); font-size: 10px; margin-top: 3px; line-height: 1.5; }
+  .norm-note {
+    margin-top: 10px; padding: 8px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; font-size: 10px; color: var(--text-dim); line-height: 1.6;
+  }
+
+  /* Log */
+  .log-wrap { padding: 12px 16px 14px; }
+  .log-table-scroll { max-height: 180px; overflow-y: auto; }
+  .log-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .log-table th {
+    color: var(--text-dim); font-weight: 400; letter-spacing: 0.08em;
+    text-transform: uppercase; font-size: 9px;
+    padding: 6px 6px 4px; text-align: left;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--surface);
+  }
+  .log-table td { padding: 5px 6px; border-bottom: 1px solid rgba(45,64,48,0.4); }
+  .log-table tr:hover td { background: var(--surface2); }
+
+  .swatch-cell {
+    width: 14px; height: 14px; border-radius: 3px;
+    display: inline-block; vertical-align: middle;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .stats-grid {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    border-top: 1px solid var(--border);
+  }
+  .stat-cell { background: var(--surface2); padding: 8px 12px; text-align: center; }
+  .stat-cell .num { color: var(--green-bright); font-size: 1.1rem; }
+  .stat-cell .lbl { color: var(--text-dim); font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .export-row {
+    padding: 10px 16px; border-top: 1px solid var(--border);
+    display: none; gap: 8px;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 860px) {
+    .workspace { grid-template-columns: 1fr; }
+    h1 { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>PixelVeg <span>— Plant Image Analyser</span></h1>
+  </header>
+  <p class="tagline">// Upload a plant image → press Start → indices calculated from all pixels</p>
+
+  <div class="workspace">
+
+    <!-- LEFT -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <span><span class="dot"></span>Image</span>
+          <span id="imgInfo" style="font-size:10px;color:var(--text-dim)"></span>
+        </div>
+
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="canvas"></canvas>
+          <div class="upload-prompt" id="uploadPrompt">
+            <span class="icon">🌿</span>
+            <p>Upload a plant photograph to begin.<br>All pixels in the image will be averaged<br>and indices calculated from the mean colour.</p>
+            <label for="fileInput" class="btn btn-primary" style="cursor:pointer">Choose Image</label>
+            <input type="file" id="fileInput" accept="image/*">
+          </div>
+        </div>
+
+        <div class="progress-wrap" id="progressWrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="pixel-info" id="pixelInfo"></div>
+
+        <div class="toolbar" id="toolbar">
+          <button class="btn btn-primary" id="btnStart" onclick="analyse()">▶ Start</button>
+          <label for="fileInput2" class="btn btn-ghost" style="cursor:pointer">Change image</label>
+          <input type="file" id="fileInput2" accept="image/*">
+          <button class="btn btn-ghost" onclick="clearLog()">Clear log</button>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="panel" style="margin-top:14px">
+        <div class="panel-header">
+          <span><span class="dot"></span>Analysis Log</span>
+          <span id="logCount" style="font-size:10px;color:var(--text-dim)">0 analyses</span>
+        </div>
+        <div class="log-wrap">
+          <div class="log-table-scroll">
+            <table class="log-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Colour</th>
+                  <th>R</th><th>G</th><th>B</th>
+                  <th>ExG</th><th>GLI</th><th>VARI</th><th>GEI</th><th>RGR</th>
+                </tr>
+              </thead>
+              <tbody id="logBody">
+                <tr><td colspan="10" style="color:var(--text-dim);text-align:center;padding:16px">No analyses yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-cell"><div class="num" id="statN">0</div><div class="lbl">Runs</div></div>
+          <div class="stat-cell"><div class="num" id="statExG">—</div><div class="lbl">Last ExG</div></div>
+          <div class="stat-cell"><div class="num" id="statGLI">—</div><div class="lbl">Last GLI</div></div>
+        </div>
+        <div class="export-row" id="exportRow">
+          <button class="btn btn-primary" onclick="exportCSV()">Export CSV</button>
+          <button class="btn btn-ghost" onclick="copyTable()">Copy Table</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="sidebar">
+
+      <div class="panel">
+        <div class="panel-header"><span><span class="dot"></span>Mean Pixel Colour</span></div>
+        <div class="mean-swatch" id="meanSwatch">run analysis to see result</div>
+        <div class="rgb-row">
+          <div class="channel r"><div class="label">Red</div><div class="value" id="rVal">—</div><div class="norm" id="rNorm">—</div></div>
+          <div class="channel g"><div class="label">Green</div><div class="value" id="gVal">—</div><div class="norm" id="gNorm">—</div></div>
+          <div class="channel b"><div class="label">Blue</div><div class="value" id="bVal">—</div><div class="norm" id="bNorm">—</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span><span class="dot"></span>Vegetation Indices</span></div>
+        <div class="indices-box">
+
+          <div class="index-row">
+            <div class="index-name"><strong>ExG</strong>Excess Green Index</div>
+            <div class="index-right">
+              <div class="index-value" id="exg" style="color:var(--green-bright)">—</div>
+              <div class="index-bar-wrap"><div class="index-bar" id="exgBar" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <div class="index-row">
+            <div class="index-name"><strong>GLI</strong>Green Leaf Index</div>
+            <div class="index-right">
+              <div class="index-value" id="gli" style="color:var(--green-bright)">—</div>
+              <div class="index-bar-wrap"><div class="index-bar" id="gliBar" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <div class="index-row">
+            <div class="index-name"><strong>VARI</strong>Vis. Atm. Resistant Index</div>
+            <div class="index-right">
+              <div class="index-value" id="vari" style="color:var(--amber)">—</div>
+              <div class="index-bar-wrap"><div class="index-bar" id="variBar" style="width:0%;background:var(--amber)"></div></div>
+            </div>
+          </div>
+
+          <div class="index-row">
+            <div class="index-name"><strong>GEI</strong>Green Excess Index</div>
+            <div class="index-right">
+              <div class="index-value" id="gei" style="color:var(--green-bright)">—</div>
+              <div class="index-bar-wrap"><div class="index-bar" id="geiBar" style="width:0%"></div></div>
+            </div>
+          </div>
+
+          <div class="index-row">
+            <div class="index-name"><strong>RGR</strong>Red / Green Ratio</div>
+            <div class="index-right">
+              <div class="index-value" id="rgr" style="color:var(--red)">—</div>
+              <div class="index-bar-wrap"><div class="index-bar" id="rgrBar" style="width:0%;background:var(--red)"></div></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span><span class="dot"></span>Formula Reference</span></div>
+        <div class="formula-box">
+
+          <div class="formula-item">
+            <div class="fname">ExG — Excess Green Index</div>
+            <div class="formula-expr">2·g − r − b</div>
+            <div class="formula-desc">Emphasises green vegetation; correlates with chlorophyll. Range ≈ −1 to 1.</div>
+          </div>
+
+          <div class="formula-item">
+            <div class="fname">GLI — Green Leaf Index</div>
+            <div class="formula-expr">(2·G − R − B) / (2·G + R + B)</div>
+            <div class="formula-desc">Uses raw 0–255 values. Positive → green biomass.</div>
+          </div>
+
+          <div class="formula-item">
+            <div class="fname">VARI — Visible Atm. Resistant Index</div>
+            <div class="formula-expr">(G − R) / (G + R − B)</div>
+            <div class="formula-desc">Reduces lighting effects. Proxy for green vegetation fraction.</div>
+          </div>
+
+          <div class="formula-item">
+            <div class="fname">GEI — Green Excess Index</div>
+            <div class="formula-expr">g − (r + b) / 2</div>
+            <div class="formula-desc">Simple normalised version; easy to compute by hand.</div>
+          </div>
+
+          <div class="formula-item">
+            <div class="fname">RGR — Red / Green Ratio</div>
+            <div class="formula-expr">R / G</div>
+            <div class="formula-desc">Low → healthy green; high → stress or senescence.</div>
+          </div>
+
+          <div class="norm-note">
+            <strong style="color:var(--text)">Normalisation:</strong><br>
+            r = R/255 &nbsp; g = G/255 &nbsp; b = B/255<br>
+            lowercase = normalised (0–1) · uppercase = raw (0–255)
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let imgLoaded = false;
+let analysisLog = [];
+
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d', { willReadFrequently: true });
+
+// ── File loading ──────────────────────────────────────────────────────────────
+function loadFile(file) {
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.onload = () => {
+    const wrap  = document.getElementById('canvasWrap');
+    const maxW  = wrap.clientWidth || 700;
+    const maxH  = 460;
+    const scale = Math.min(maxW / image.naturalWidth, maxH / image.naturalHeight, 1);
+    canvas.width  = Math.round(image.naturalWidth  * scale);
+    canvas.height = Math.round(image.naturalHeight * scale);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    document.getElementById('uploadPrompt').style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('toolbar').style.display = 'flex';
+    document.getElementById('imgInfo').textContent =
+      image.naturalWidth + ' × ' + image.naturalHeight + ' px';
+
+    resetDisplay();
+    imgLoaded = true;
+    URL.revokeObjectURL(url);
+  };
+  image.src = url;
+}
+
+document.getElementById('fileInput').addEventListener('change',  e => loadFile(e.target.files[0]));
+document.getElementById('fileInput2').addEventListener('change', e => loadFile(e.target.files[0]));
+
+// ── Indices ───────────────────────────────────────────────────────────────────
+function computeIndices(R, G, B) {
+  const r = R / 255, g = G / 255, b = B / 255;
+  const exg  = 2 * g - r - b;
+  const gli  = (2 * G - R - B) / (2 * G + R + B + 0.0001);
+  const den  = G + R - B;
+  const vari = Math.abs(den) < 0.5 ? 0 : (G - R) / den;
+  const gei  = g - (r + b) / 2;
+  const rgr  = G < 1 ? 0 : R / G;
+  return { r, g, b, exg, gli, vari, gei, rgr };
+}
+
+function fmt(v) { return isNaN(v) ? '—' : v.toFixed(3); }
+
+function barPct(v, min, max) {
+  return Math.max(0, Math.min(100, ((v - min) / (max - min)) * 100));
+}
+
+// ── Analysis ──────────────────────────────────────────────────────────────────
+function analyse() {
+  if (!imgLoaded) return;
+
+  const btn = document.getElementById('btnStart');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analysing…';
+
+  const pw = document.getElementById('progressWrap');
+  const pb = document.getElementById('progressBar');
+  pw.style.display = 'block';
+  pb.style.width = '0%';
+
+  // Small delay so the button state renders before heavy pixel work
+  setTimeout(() => {
+    const w = canvas.width, h = canvas.height;
+    const data  = ctx.getImageData(0, 0, w, h).data;
+    const total = w * h;
+    let sumR = 0, sumG = 0, sumB = 0;
+    let i = 0;
+    const chunkSize = 60000 * 4; // pixels × 4 channels
+
+    function processChunk() {
+      const end = Math.min(i + chunkSize, data.length);
+      while (i < end) {
+        sumR += data[i];
+        sumG += data[i + 1];
+        sumB += data[i + 2];
+        i += 4;
+      }
+      pb.style.width = Math.round((i / data.length) * 100) + '%';
+
+      if (i < data.length) {
+        requestAnimationFrame(processChunk);
+      } else {
+        const R = Math.round(sumR / total);
+        const G = Math.round(sumG / total);
+        const B = Math.round(sumB / total);
+        finishAnalysis(R, G, B, total);
+        pb.style.width = '100%';
+        setTimeout(() => { pw.style.display = 'none'; pb.style.width = '0%'; }, 500);
+        btn.disabled = false;
+        btn.textContent = '▶ Start';
+      }
+    }
+
+    processChunk();
+  }, 30);
+}
+
+function finishAnalysis(R, G, B, totalPixels) {
+  const idx = computeIndices(R, G, B);
+
+  // Swatch
+  const swatch = document.getElementById('meanSwatch');
+  swatch.style.background = 'rgb(' + R + ',' + G + ',' + B + ')';
+  swatch.style.color = (idx.r + idx.g + idx.b) > 1.5 ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.65)';
+  swatch.textContent = 'rgb(' + R + ', ' + G + ', ' + B + ')';
+
+  // Channels
+  document.getElementById('rVal').textContent  = R;
+  document.getElementById('gVal').textContent  = G;
+  document.getElementById('bVal').textContent  = B;
+  document.getElementById('rNorm').textContent = idx.r.toFixed(3);
+  document.getElementById('gNorm').textContent = idx.g.toFixed(3);
+  document.getElementById('bNorm').textContent = idx.b.toFixed(3);
+
+  // Indices + bars
+  document.getElementById('exg').textContent  = fmt(idx.exg);
+  document.getElementById('gli').textContent  = fmt(idx.gli);
+  document.getElementById('vari').textContent = fmt(idx.vari);
+  document.getElementById('gei').textContent  = fmt(idx.gei);
+  document.getElementById('rgr').textContent  = fmt(idx.rgr);
+
+  document.getElementById('exgBar').style.width  = barPct(idx.exg,  -1,   1)   + '%';
+  document.getElementById('gliBar').style.width  = barPct(idx.gli,  -1,   1)   + '%';
+  document.getElementById('variBar').style.width = barPct(idx.vari, -2,   2)   + '%';
+  document.getElementById('geiBar').style.width  = barPct(idx.gei,  -0.5, 0.5) + '%';
+  document.getElementById('rgrBar').style.width  = barPct(idx.rgr,   0,   3)   + '%';
+
+  // Pixel info strip
+  const pi = document.getElementById('pixelInfo');
+  pi.style.display = 'block';
+  pi.textContent = 'Analysed ' + totalPixels.toLocaleString() + ' pixels · mean colour shown in sidebar';
+
+  // Log
+  const entry = { n: analysisLog.length + 1, R, G, B, ...idx };
+  analysisLog.push(entry);
+  addLogRow(entry);
+
+  document.getElementById('statN').textContent   = analysisLog.length;
+  document.getElementById('statExG').textContent = fmt(idx.exg);
+  document.getElementById('statGLI').textContent = fmt(idx.gli);
+  document.getElementById('statsGrid').style.display  = 'grid';
+  document.getElementById('exportRow').style.display  = 'flex';
+  document.getElementById('logCount').textContent =
+    analysisLog.length + ' analys' + (analysisLog.length === 1 ? 'is' : 'es');
+}
+
+// ── Log table ─────────────────────────────────────────────────────────────────
+function addLogRow(e) {
+  const tbody = document.getElementById('logBody');
+  if (tbody.rows.length === 1 && tbody.rows[0].cells.length === 1) tbody.innerHTML = '';
+  const tr = tbody.insertRow(0);
+  tr.innerHTML =
+    '<td>' + e.n + '</td>' +
+    '<td><span class="swatch-cell" style="background:rgb(' + e.R + ',' + e.G + ',' + e.B + ')"></span></td>' +
+    '<td>' + e.R + '</td><td>' + e.G + '</td><td>' + e.B + '</td>' +
+    '<td>' + fmt(e.exg)  + '</td>' +
+    '<td>' + fmt(e.gli)  + '</td>' +
+    '<td>' + fmt(e.vari) + '</td>' +
+    '<td>' + fmt(e.gei)  + '</td>' +
+    '<td>' + fmt(e.rgr)  + '</td>';
+}
+
+function clearLog() {
+  analysisLog = [];
+  document.getElementById('logBody').innerHTML =
+    '<tr><td colspan="10" style="color:var(--text-dim);text-align:center;padding:16px">No analyses yet</td></tr>';
+  document.getElementById('statsGrid').style.display = 'none';
+  document.getElementById('exportRow').style.display = 'none';
+  document.getElementById('logCount').textContent = '0 analyses';
+}
+
+function resetDisplay() {
+  ['rVal','gVal','bVal','rNorm','gNorm','bNorm','exg','gli','vari','gei','rgr']
+    .forEach(id => { document.getElementById(id).textContent = '—'; });
+  ['exgBar','gliBar','variBar','geiBar','rgrBar']
+    .forEach(id => { document.getElementById(id).style.width = '0%'; });
+  const sw = document.getElementById('meanSwatch');
+  sw.style.background = '#1e2d20';
+  sw.textContent = 'run analysis to see result';
+  sw.style.color = 'var(--text-dim)';
+  document.getElementById('pixelInfo').style.display = 'none';
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const header = '#,R,G,B,r_norm,g_norm,b_norm,ExG,GLI,VARI,GEI,RGR\n';
+  const rows = analysisLog.map(e =>
+    [e.n, e.R, e.G, e.B,
+     e.r.toFixed(4), e.g.toFixed(4), e.b.toFixed(4),
+     e.exg.toFixed(4), e.gli.toFixed(4), e.vari.toFixed(4),
+     e.gei.toFixed(4), e.rgr.toFixed(4)].join(',')
+  ).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'PixelVeg_analysis.csv';
+  a.click();
+}
+
+function copyTable() {
+  const header = ['#','R','G','B','r','g','b','ExG','GLI','VARI','GEI','RGR'].join('\t');
+  const rows = analysisLog.map(e =>
+    [e.n, e.R, e.G, e.B,
+     e.r.toFixed(3), e.g.toFixed(3), e.b.toFixed(3),
+     e.exg.toFixed(3), e.gli.toFixed(3), e.vari.toFixed(3),
+     e.gei.toFixed(3), e.rgr.toFixed(3)].join('\t')
+  ).join('\n');
+  navigator.clipboard.writeText(header + '\n' + rows)
+    .then(() => alert('Copied! Paste into Excel or Google Sheets.'));
+}
+</script>
+</body>
+</html>
