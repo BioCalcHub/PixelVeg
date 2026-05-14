@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'none'; frame-ancestors 'none';">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="description" content="BioCalcHub — free browser-based tools for non-invasive plant image analysis. Estimate chlorophyll levels and vegetation health without programming.">
+  <title>BioCalcHub — Plant Image Analysis Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <div class="logo-mark" aria-hidden="true">
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="38" height="38" rx="10" fill="#2d6a4f"/>
+          <path d="M19 8C19 8 11 14 11 21a8 8 0 0016 0c0-7-8-13-8-13z" fill="#74c69d"/>
+          <path d="M19 14C19 14 14 18 14 22a5 5 0 0010 0c0-4-5-8-5-8z" fill="#b7e4c7"/>
+          <rect x="18" y="22" width="2" height="8" rx="1" fill="#2d6a4f"/>
+        </svg>
+      </div>
+      <span class="site-name">BioCalcHub</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <h1>Plant image analysis,<br><em>no coding required.</em></h1>
+        <p class="hero-lead">
+          A collection of free, browser-based calculators for researchers and students. Upload a plant photograph and extract vegetation indices — ExG, GLI, VARI, and more — to estimate chlorophyll levels and canopy health non-invasively.
+        </p>
+        <p class="hero-note">All processing happens in your browser. No data is uploaded to any server.</p>
+      </div>
+    </section>
+
+    <section class="calculators" aria-label="Available calculators">
+      <div class="container">
+        <h2 class="section-label">Calculators</h2>
+        <div class="card-grid">
+
+          <article class="calc-card active">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="18" cy="15" r="9" stroke="#2d6a4f" stroke-width="2" fill="none"/>
+                <path d="M18 9C18 9 13 13 13 17a5 5 0 0010 0c0-4-5-8-5-8z" fill="#74c69d"/>
+                <rect x="17" y="22" width="2" height="6" rx="1" fill="#2d6a4f"/>
+                <line x1="14" y1="28" x2="22" y2="28" stroke="#2d6a4f" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="card-body">
+              <h3>PixelVeg</h3>
+              <p class="card-desc">Upload a plant image to compute mean RGB values and five vegetation indices. Exports results as CSV for use in spreadsheets or statistical software.</p>
+              <ul class="index-list" aria-label="Indices calculated">
+                <li>ExG</li><li>GLI</li><li>VARI</li><li>GEI</li><li>RGR</li>
+              </ul>
+            </div>
+            <a href="/pixelveg/" class="card-cta" aria-label="Open PixelVeg calculator">
+              Open calculator
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+          </article>
+
+          <article class="calc-card coming-soon" aria-label="Calculator 2, coming soon">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="10" width="28" height="20" rx="3" stroke="#9db4a8" stroke-width="2" fill="none"/>
+                <path d="M4 15h28" stroke="#9db4a8" stroke-width="1.5"/>
+                <rect x="8" y="20" width="6" height="4" rx="1" fill="#c8ddd5"/>
+                <rect x="16" y="20" width="6" height="4" rx="1" fill="#c8ddd5"/>
+                <rect x="24" y="20" width="4" height="4" rx="1" fill="#c8ddd5"/>
+                <path d="M13 6l-3 4M23 6l3 4" stroke="#9db4a8" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="card-body">
+              <span class="badge-soon">Coming soon</span>
+              <h3>Calculator 2</h3>
+              <p class="card-desc">A new analysis tool is in development. Check back soon.</p>
+            </div>
+            <span class="card-cta disabled" aria-disabled="true">In development</span>
+          </article>
+
+          <article class="calc-card coming-soon" aria-label="Calculator 3, coming soon">
+            <div class="card-icon" aria-hidden="true">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="18" cy="18" r="12" stroke="#9db4a8" stroke-width="2" fill="none"/>
+                <path d="M18 10v8l5 3" stroke="#9db4a8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="18" cy="18" r="2" fill="#c8ddd5"/>
+              </svg>
+            </div>
+            <div class="card-body">
+              <span class="badge-soon">Coming soon</span>
+              <h3>Calculator 3</h3>
+              <p class="card-desc">A new analysis tool is in development. Check back soon.</p>
+            </div>
+            <span class="card-cta disabled" aria-disabled="true">In development</span>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="about">
+      <div class="container about-inner">
+        <div class="about-text">
+          <h2>About the project</h2>
+          <p>BioCalcHub was built to lower the barrier for plant phenotyping research. Traditional chlorophyll measurement requires destructive sampling or expensive instrumentation — this project explores what can be inferred from ordinary RGB photographs.</p>
+          <p>The tools are intended for exploratory analysis and education. Results depend on image quality, lighting conditions, and the proportion of background in the frame. For publication-grade measurements, validate against ground-truth data.</p>
+        </div>
+        <div class="about-stat-block" aria-label="Project highlights">
+          <div class="stat">
+            <span class="stat-num">5</span>
+            <span class="stat-label">Vegetation indices</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">0</span>
+            <span class="stat-label">Lines of code needed</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num">100%</span>
+            <span class="stat-label">Browser-based</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>BioCalcHub &mdash; open tools for plant image analysis</span>
+      <span class="footer-note">Results are for research and educational use. Validate before citing.</span>
+    </div>
+  </footer>
+
+</body>
+</html>
