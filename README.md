@@ -3,7 +3,7 @@ Plant Image Analyser. Upload a plant image to compute mean RGB values and five v
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgreen.svg)](https://opensource.org/licenses/MIT)
-[![DOI]( )](https://doi.org/)
+[![DOI](https://doi.org/10.5281/zenodo.20179128)](https://doi.org/10.5281/zenodo.20179128)
 
 
 
@@ -91,7 +91,7 @@ If you use PixelVeg in your research, please cite it as follows.
 
 ### APA
 
-> [Hlubina, P., Uvackova, L.] ([2026]). *PixelVeg: Plant Image Analyser* (Version [1.X.X]) [Software]. Zenodo. https://doi.org/
+> [Hlubina, P., Uvackova, L.] ([2026]). *PixelVeg: Plant Image Analyser* (Version [1.X.X]) [Software]. Zenodo. https://doi.org/10.5281/zenodo.20179128
 
 ### BibTeX
 
@@ -101,9 +101,9 @@ If you use PixelVeg in your research, please cite it as follows.
   title        = {PixelVeg: Plant Image Analyser},
   year         = {[2026]},
   publisher    = {Zenodo},
-  version      = {[1.X.X]},
-  doi          = {},
-  url          = {}
+  version      = {[1.0.0]},
+  doi          = {10.5281/zenodo.20179128},
+  url          = {https://doi.org/10.5281/zenodo.20179128}
 }
 ```
 ---
