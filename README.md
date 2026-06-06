@@ -1,5 +1,5 @@
 # PixelVeg — Plant Image Analyser
-Plant Image Analyser. Upload a plant image to compute mean RGB values and five vegetation indices.
+Plant Image Analyser. Upload a plant image to compute mean RGB values and five vegetation indices. Online version: https://biocalchub.com/pixelveg/
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgreen.svg)](https://opensource.org/licenses/MIT)
